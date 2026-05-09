@@ -1,0 +1,669 @@
+
+tutorial-1.html
+
+Page
+1
+/
+1
+100%
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python & Regex for LLM Tokenisation — Ch. 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #07090f;
+    --navy2:   #0e1220;
+    --navy3:   #161c2d;
+    --navy4:   #1e2640;
+    --border:  #2a3354;
+    --amber:   #f0a832;
+    --amber2:  #ffd07a;
+    --teal:    #2dd4bf;
+    --teal2:   #99f6e4;
+    --coral:   #fb7185;
+    --blue:    #7dd3fc;
+    --purple:  #c084fc;
+    --white:   #f0f4ff;
+    --muted:   #8892b0;
+    --mono:    'IBM Plex Mono', monospace;
+    --serif:   'Playfair Display', Georgia, serif;
+    --body:    'Lora', Georgia, serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.75;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--navy2);
+    border-bottom: 1px solid var(--border);
+    padding: 3.5rem 2rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 0%, #1e2d5a 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    border: 1px solid var(--amber);
+    border-radius: 4px;
+    padding: 3px 10px;
+    margin-bottom: 1.25rem;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 600;
+    letter-spacing: -.01em;
+    line-height: 1.2;
+    color: var(--white);
+    margin-bottom: .6rem;
+    position: relative;
+  }
+  .subtitle {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    position: relative;
+  }
+  .subtitle span { color: var(--teal); }
+
+  /* ── LAYOUT ── */
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+  }
+
+  /* ── INTRO ── */
+  .intro {
+    background: var(--navy3);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--amber);
+    border-radius: 0 10px 10px 0;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 3rem;
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .intro strong { color: var(--white); font-style: normal; }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 2.5rem 0 1rem;
+  }
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--amber);
+    color: var(--navy);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-label h2 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  /* ── COMMAND CARD ── */
+  .cmd-card {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: .5rem;
+    overflow: hidden;
+  }
+  .cmd-header {
+    background: var(--navy3);
+    border-bottom: 1px solid var(--border);
+    padding: .75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .d1 { background: #ff5f57; }
+  .d2 { background: #febc2e; }
+  .d3 { background: #28c840; }
+  .cmd-sig {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--amber2);
+    margin-left: 6px;
+  }
+  .cmd-body { padding: 1.25rem 1.5rem; }
+  .cmd-desc {
+    font-size: 15px;
+    color: #c8d0e8;
+    line-height: 1.8;
+    margin-bottom: 1rem;
+  }
+  .cmd-desc em { color: var(--amber2); font-style: normal; font-family: var(--mono); font-size: 13px; background: #1e2640; padding: 1px 6px; border-radius: 4px; }
+
+  /* ── ANATOMY ── */
+  .anatomy {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 2;
+  }
+  .p-fn   { color: var(--blue); }
+  .p-pat  { color: var(--amber); }
+  .p-arg  { color: var(--teal); }
+  .p-sep  { color: var(--muted); }
+  .p-kw   { color: var(--purple); }
+  .a-comment { display: block; color: var(--muted); font-size: 12px; padding-left: 1.5rem; line-height: 1.6; margin-top: 2px; }
+  .a-comment strong { color: var(--white); }
+
+  /* ── OUTPUT BOX ── */
+  .out-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 6px;
+  }
+  .out-box {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--teal);
+    border-radius: 0 8px 8px 0;
+    padding: .75rem 1.25rem;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--teal2);
+    line-height: 1.9;
+    word-break: break-all;
+  }
+  .out-box .hl { color: var(--amber2); }
+  .out-box .dim { color: var(--muted); }
+
+  /* ── KEY POINT ── */
+  .key-point {
+    margin-top: 1rem;
+    border-left: 2px solid var(--border);
+    padding-left: 1rem;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.75;
+  }
+  .key-point strong { color: var(--white); }
+  .key-point em { color: var(--amber); font-style: normal; font-family: var(--mono); font-size: 12px; background: #1e2640; padding: 1px 5px; border-radius: 3px; }
+
+  /* ── DEEP DIVE SECTION ── */
+  .deep-dive {
+    background: var(--navy2);
+    border: 1px solid var(--amber);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: .5rem;
+  }
+  .deep-dive-header {
+    background: #1a1500;
+    border-bottom: 1px solid var(--amber);
+    padding: .9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .deep-dive-header .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    background: rgba(240,168,50,.12);
+    border: 1px solid var(--amber);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+  .deep-dive-header h3 {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--amber2);
+    font-style: italic;
+  }
+  .deep-dive-body { padding: 1.5rem; }
+
+  .question {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    color: var(--white);
+    margin-bottom: 1.25rem;
+    line-height: 1.6;
+    font-style: italic;
+  }
+  .question strong { font-style: normal; color: var(--amber2); font-family: var(--mono); font-size: .95rem; }
+
+  .answer-para {
+    font-size: 15px;
+    color: #c8d0e8;
+    line-height: 1.85;
+    margin-bottom: 1.25rem;
+  }
+  .answer-para em { color: var(--amber2); font-family: var(--mono); font-size: 13px; font-style: normal; background: #1e2640; padding: 1px 6px; border-radius: 4px; }
+  .answer-para strong { color: var(--white); }
+
+  /* ── SIDE-BY-SIDE CODE COMPARISON ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .code-block {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .code-block-title {
+    background: var(--navy3);
+    border-bottom: 1px solid var(--border);
+    padding: .5rem 1rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .code-block-title.hl-amber { color: var(--amber); border-bottom-color: var(--amber); }
+  .code-block-title.hl-teal  { color: var(--teal);  border-bottom-color: var(--teal); }
+  pre {
+    padding: 1rem;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 2;
+    color: var(--white);
+    white-space: pre-wrap;
+  }
+  .kw  { color: var(--purple); }
+  .fn  { color: var(--blue); }
+  .str { color: var(--teal2); }
+  .cm  { color: var(--muted); }
+  .var { color: var(--amber2); }
+
+  /* ── READING ORDER ── */
+  .reading-order {
+    background: var(--navy3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin: 1.25rem 0;
+  }
+  .reading-order .ro-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: .75rem;
+  }
+  .ro-steps {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .ro-step {
+    background: var(--navy4);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--white);
+  }
+  .ro-step.s-for    { border-color: var(--purple); color: var(--purple); }
+  .ro-step.s-if     { border-color: var(--teal);   color: var(--teal); }
+  .ro-step.s-collect{ border-color: var(--amber);  color: var(--amber); }
+  .ro-arrow { color: var(--muted); font-size: 18px; }
+
+  .callout {
+    margin-top: 1.25rem;
+    background: rgba(45,212,191,.06);
+    border: 1px solid rgba(45,212,191,.25);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-size: 14px;
+    color: #a7f3e4;
+    line-height: 1.75;
+  }
+  .callout strong { color: var(--teal2); }
+  .callout em { color: var(--teal2); font-style: normal; font-family: var(--mono); font-size: 12px; background: rgba(45,212,191,.1); padding: 1px 5px; border-radius: 3px; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+  footer span { color: var(--amber); }
+
+  /* ── ANIMATION ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .cmd-card, .deep-dive, .intro {
+    animation: fadeUp .5s ease both;
+  }
+  .cmd-card:nth-child(1) { animation-delay: .05s }
+  .cmd-card:nth-child(2) { animation-delay: .10s }
+  .cmd-card:nth-child(3) { animation-delay: .15s }
+  .cmd-card:nth-child(4) { animation-delay: .20s }
+  .cmd-card:nth-child(5) { animation-delay: .25s }
+  .cmd-card:nth-child(6) { animation-delay: .30s }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">Build an LLM from Scratch · Chapter 2</div>
+  <h1>Python &amp; Regex for Tokenisation</h1>
+  <p class="subtitle">An orchestrated pedagogical sequence &nbsp;·&nbsp; <span>IIT Hyderabad · Summer Project 2026</span></p>
+</header>
+
+<main>
+
+  <div class="intro">
+    <strong>What is tokenisation?</strong> Before an LLM can learn from text, it must convert raw characters into discrete units called <em>tokens</em>. This page explains every Python command used in Chapter 2 to build that pipeline — in the order that makes the most sense for learning, not the order they appear in the notebook.
+  </div>
+
+  <!-- ── 1. f.read() ── -->
+  <div class="section-label">
+    <div class="step-num">1</div>
+    <h2>Reading a file</h2>
+  </div>
+  <div class="cmd-card">
+    <div class="cmd-header">
+      <div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div>
+      <span class="cmd-sig">f.read()</span>
+    </div>
+    <div class="cmd-body">
+      <p class="cmd-desc">Reads the <em>entire contents</em> of an open file and returns it as one long string. The <em>f</em> is just the variable name for the file object — it could be anything.</p>
+      <div class="anatomy">
+        <span class="p-kw">with</span> <span class="p-fn">open</span>(<span class="p-arg">"the-verdict.txt"</span>, <span class="p-arg">"r"</span>, encoding=<span class="p-arg">"utf-8"</span>) <span class="p-kw">as</span> <span class="p-fn">f</span>:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;raw_text = <span class="p-fn">f.read</span>()<br>
+        <span class="a-comment"><strong>"r"</strong> → open in read mode (not write)</span>
+        <span class="a-comment"><strong>encoding="utf-8"</strong> → interpret the bytes as UTF-8 text</span>
+        <span class="a-comment"><strong>f.read()</strong> → pulls all characters into a single string</span>
+      </div>
+      <div class="out-label">Output</div>
+      <div class="out-box">
+        Total no of characters: <span class="hl">20481</span><br>
+        <span class="hl">"I HAD always thought Jack Gisburn rather a cheap genius..."</span>
+      </div>
+      <div class="key-point">The <strong>with open(…) as f:</strong> block automatically closes the file when the indented block ends — safer than calling <em>f.close()</em> yourself.</div>
+    </div>
+  </div>
+
+  <!-- ── 2. re.split whitespace ── -->
+  <div class="section-label">
+    <div class="step-num">2</div>
+    <h2>Splitting on whitespace</h2>
+  </div>
+  <div class="cmd-card">
+    <div class="cmd-header">
+      <div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div>
+      <span class="cmd-sig">re.split(r'(\s)', text)</span>
+    </div>
+    <div class="cmd-body">
+      <p class="cmd-desc"><em>re.split</em> breaks a string wherever a pattern matches. Here the pattern is <em>\s</em>, which means any whitespace character (space, tab, newline).</p>
+      <div class="anatomy">
+        <span class="p-fn">re</span><span class="p-sep">.</span><span class="p-fn">split</span>(<span class="p-pat">r'(\s)'</span>, <span class="p-arg">text</span>)<br>
+        <span class="a-comment"><strong>r'...'</strong> → raw string: backslashes are NOT treated as Python escape characters</span>
+        <span class="a-comment"><strong>\s</strong> → regex shorthand for any whitespace (space, tab, \n, \r)</span>
+        <span class="a-comment"><strong>( )</strong> → the parentheses KEEP the delimiter in the output list</span>
+      </div>
+      <div class="out-label">Input → Output</div>
+      <div class="out-box">
+        <span class="dim">Input:</span>  <span class="hl">"hello world! This, is: a test."</span><br>
+        <span class="dim">Output:</span> ['hello', ' ', 'world!', ' ', 'This,', ' ', 'is:', ' ', 'a', ' ', 'test.']
+      </div>
+      <div class="key-point">Without the parentheses — <em>r'\s'</em> — the spaces would be <strong>discarded</strong>. The parentheses <em>capture</em> them so you can inspect where splits happened.</div>
+    </div>
+  </div>
+
+  <!-- ── 3. strip() ── -->
+  <div class="section-label">
+    <div class="step-num">3</div>
+    <h2>Stripping whitespace</h2>
+  </div>
+  <div class="cmd-card">
+    <div class="cmd-header">
+      <div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div>
+      <span class="cmd-sig">item.strip()</span>
+    </div>
+    <div class="cmd-body">
+      <p class="cmd-desc">Removes leading and trailing whitespace (spaces, newlines, tabs) from a string. It does not touch whitespace in the middle.</p>
+      <div class="anatomy">
+        <span class="p-arg">"&nbsp;&nbsp;hello&nbsp;&nbsp;"</span>.<span class="p-fn">strip</span>()
+        <span class="a-comment">→ <strong>"hello"</strong> &nbsp; (outer spaces removed)</span>
+        <br>
+        <span class="p-arg">"&nbsp;&nbsp;"</span>.<span class="p-fn">strip</span>()
+        <span class="a-comment">→ <strong>""</strong> &nbsp; (empty string — this is <em>falsy</em> in Python)</span>
+        <br>
+        <span class="p-arg">"hello world"</span>.<span class="p-fn">strip</span>()
+        <span class="a-comment">→ <strong>"hello world"</strong> &nbsp; (middle space untouched)</span>
+      </div>
+      <div class="key-point">An empty string <em>""</em> evaluates to <strong>False</strong> in Python. This becomes the filter mechanism in the list comprehension — Step 6.</div>
+    </div>
+  </div>
+
+  <!-- ── 4. re.split with punctuation ── -->
+  <div class="section-label">
+    <div class="step-num">4</div>
+    <h2>Adding punctuation to the split</h2>
+  </div>
+  <div class="cmd-card">
+    <div class="cmd-header">
+      <div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div>
+      <span class="cmd-sig">re.split(r'([,.]|\s)', text)</span>
+    </div>
+    <div class="cmd-body">
+      <p class="cmd-desc">Now we split on commas, full stops, or whitespace. The <em>|</em> means "or" — the pattern matches whichever alternative it finds first.</p>
+      <div class="anatomy">
+        <span class="p-fn">re</span><span class="p-sep">.</span><span class="p-fn">split</span>(<span class="p-pat">r'([,.]|\s)'</span>, <span class="p-arg">text</span>)<br>
+        <span class="a-comment"><strong>[,.]</strong> → character class: matches either <em>,</em> or <em>.</em></span>
+        <span class="a-comment"><strong>|</strong> &nbsp; → OR</span>
+        <span class="a-comment"><strong>\s</strong> → any whitespace</span>
+        <span class="a-comment"><strong>( )</strong> → keep matched delimiters in result</span>
+      </div>
+      <div class="out-label">Input → Output</div>
+      <div class="out-box">
+        <span class="dim">Input:</span>  <span class="hl">"hello world! This, is: a test."</span><br>
+        <span class="dim">Output:</span> ['hello', ' ', 'world!', ' ', 'This', <span class="hl">','</span>, <span class="hl">''</span>, ' ', 'is:', ' ', 'a', ' ', 'test', <span class="hl">'.'</span>, <span class="hl">''</span>]
+      </div>
+      <div class="key-point">Notice the empty strings <em>''</em> — they appear when a comma is immediately followed by a space: splitting on both leaves nothing between them. These must be cleaned up.</div>
+    </div>
+  </div>
+
+  <!-- ── 5. full tokeniser pattern ── -->
+  <div class="section-label">
+    <div class="step-num">5</div>
+    <h2>The full tokeniser pattern</h2>
+  </div>
+  <div class="cmd-card">
+    <div class="cmd-header">
+      <div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div>
+      <span class="cmd-sig">re.split(r'([,.:;?_!"()\']\|--|\s)', text)</span>
+    </div>
+    <div class="cmd-body">
+      <p class="cmd-desc">The complete punctuation-aware split used in Chapter 2. It handles all common punctuation marks plus the double-dash <em>--</em> as a single token.</p>
+      <div class="anatomy">
+        <span class="p-fn">re</span><span class="p-sep">.</span><span class="p-fn">split</span>(<span class="p-pat">r'([,.:;?_!"()\']\|--|\s)'</span>, <span class="p-arg">text</span>)<br>
+        <span class="a-comment"><strong>[,.:;?_!"()\'&nbsp;]</strong> → all common punctuation. The <em>\'</em> is an escaped apostrophe</span>
+        <span class="a-comment"><strong>|</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ OR</span>
+        <span class="a-comment"><strong>--</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ literal double-dash, matched as one unit (em-dash substitute)</span>
+        <span class="a-comment"><strong>|</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ OR</span>
+        <span class="a-comment"><strong>\s</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ any whitespace</span>
+      </div>
+      <div class="out-label">Input → Output</div>
+      <div class="out-box">
+        <span class="dim">Input:</span>  <span class="hl">"hello world! This, is -- a test."</span><br>
+        <span class="dim">Output:</span> ['hello', 'world', <span class="hl">'!'</span>, 'This', <span class="hl">','</span>, 'is', <span class="hl">'--'</span>, 'a', 'test', <span class="hl">'.'</span>]
+      </div>
+      <div class="key-point"><strong>Order matters:</strong> <em>--</em> must appear <strong>before</strong> <em>\s</em> in the pattern. Regex tries alternatives left-to-right — if whitespace matched first, the double-dash might never be captured as a single unit.</div>
+    </div>
+  </div>
+
+  <!-- ── 6. list comprehension ── -->
+  <div class="section-label">
+    <div class="step-num">6</div>
+    <h2>List comprehension — clean the result</h2>
+  </div>
+  <div class="cmd-card">
+    <div class="cmd-header">
+      <div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div>
+      <span class="cmd-sig">result = [item.strip() for item in result if item.strip()]</span>
+    </div>
+    <div class="cmd-body">
+      <p class="cmd-desc">One line that does two things simultaneously: strips whitespace from every item, <em>and</em> discards any item that becomes empty after stripping.</p>
+      <div class="anatomy">
+        result = [<span class="p-fn">item.strip()</span> &nbsp;<span class="p-kw">for</span> <span class="p-arg">item</span> <span class="p-kw">in</span> result &nbsp;<span class="p-kw">if</span> <span class="p-fn">item.strip()</span>]<br>
+        <span class="a-comment"><strong>item.strip()</strong> (before for) → what to PUT in the new list</span>
+        <span class="a-comment"><strong>for item in result</strong> → loop over every element; this CREATES the variable item</span>
+        <span class="a-comment"><strong>if item.strip()</strong> → only include if strip() returns a non-empty (truthy) string</span>
+      </div>
+      <div class="out-label">Before → After</div>
+      <div class="out-box">
+        <span class="dim">Before:</span> ['hello', ' ', 'world!', ' ', 'This', ',', <span class="hl">''</span>, ' ', 'is:', ' ', 'a', ' ', 'test', '.', <span class="hl">''</span>]<br>
+        <span class="dim">After: </span> ['hello', 'world!', 'This', ',', 'is:', 'a', 'test', '.']
+      </div>
+      <div class="key-point">The <em>if item.strip()</em> at the end is the filter. An empty string <em>""</em> and a lone space <em>" "</em> both evaluate to <strong>False</strong>, so they are excluded. This is why understanding <em>strip()</em>'s falsy behaviour in Step 3 matters here.</div>
+    </div>
+  </div>
+
+  <!-- ── DEEP DIVE ── -->
+  <div class="section-label">
+    <div class="step-num" style="background:var(--amber2)">?</div>
+    <h2>Deep dive — where is <code style="color:var(--amber);font-size:13px">item</code> defined?</h2>
+  </div>
+
+  <div class="deep-dive">
+    <div class="deep-dive-header">
+      <span class="tag">Student question</span>
+      <h3>I don't see item defined anywhere. Where does it come from?</h3>
+    </div>
+    <div class="deep-dive-body">
+
+      <p class="answer-para">
+        <em>item</em> is defined right there inside the comprehension — by the <em>for</em> part. It does not exist before the loop starts. The <em>for item in result</em> clause is what <strong>creates</strong> the variable <em>item</em> and reassigns it on every iteration. There is no separate definition line above it.
+      </p>
+
+      <p class="answer-para">
+        The confusion arises because a list comprehension is really a <strong>regular for-loop written in compressed form</strong>. Here is the same logic written both ways — they produce identical results:
+      </p>
+
+      <div class="compare-grid">
+        <div class="code-block">
+          <div class="code-block-title hl-amber">Regular for-loop</div>
+          <pre><span class="cm"># item is created by the for line</span>
+new_list = []
+<span class="kw">for</span> <span class="var">item</span> <span class="kw">in</span> result:
+    <span class="kw">if</span> <span class="fn">item.strip</span>():
+        new_list.<span class="fn">append</span>(
+            <span class="fn">item.strip</span>()
+        )</pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-title hl-teal">List comprehension</div>
+          <pre><span class="cm"># compressed into one line</span>
+
+
+
+result = [
+    <span class="fn">item.strip</span>()
+    <span class="kw">for</span> <span class="var">item</span> <span class="kw">in</span> result
+    <span class="kw">if</span> <span class="fn">item.strip</span>()
+]</pre>
+        </div>
+      </div>
+
+      <p class="answer-para">
+        They are <strong>100% identical</strong> in what they do. The only difference is that in the comprehension syntax, Python requires you to write the <em>output expression first</em> — even though logically the loop runs first.
+      </p>
+
+      <div class="reading-order">
+        <div class="ro-title">Reading order vs writing order</div>
+        <div class="ro-steps">
+          <div class="ro-step s-for">① for item in result</div>
+          <div class="ro-arrow">→</div>
+          <div class="ro-step s-if">② if item.strip()</div>
+          <div class="ro-arrow">→</div>
+          <div class="ro-step s-collect">③ collect item.strip()</div>
+        </div>
+      </div>
+
+      <p class="answer-para">
+        The trick is to <strong>start reading from the middle</strong>, not the left:
+      </p>
+
+      <blockquote style="border-left:3px solid var(--amber);padding-left:1.25rem;margin:1.25rem 0;font-style:italic;color:#c8d0e8;font-size:15px;line-height:1.8">
+        "For each <code style="color:var(--amber2);background:#1e2640;padding:1px 6px;border-radius:3px;font-style:normal">item</code> in <code style="color:var(--teal2);background:#1e2640;padding:1px 6px;border-radius:3px;font-style:normal">result</code> — if <code style="color:var(--amber2);background:#1e2640;padding:1px 6px;border-radius:3px;font-style:normal">item.strip()</code> is non-empty — give me <code style="color:var(--amber2);background:#1e2640;padding:1px 6px;border-radius:3px;font-style:normal">item.strip()</code>"
+      </blockquote>
+
+      <div class="callout">
+        <strong>Why write it as a comprehension at all?</strong> — Three reasons: it is faster than a regular loop (Python optimises it internally), it is shorter, and once you get used to reading them, it is actually clearer. Most Python programmers strongly prefer comprehensions for simple filter-and-transform operations like this one.
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Build an LLM from Scratch · Sebastian Raschka (2024) &nbsp;·&nbsp; <span>IIT Hyderabad · Summer Project 2026</span>
+</footer>
+
+</body>
+</html>
+Displaying tutorial-1.html.
